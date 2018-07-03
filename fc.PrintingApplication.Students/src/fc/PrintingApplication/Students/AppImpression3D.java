@@ -1,20 +1,8 @@
 package fc.PrintingApplication.Students;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.util.List;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-
-import javax.imageio.ImageIO;
-
-import com.owens.oobjloader.builder.FaceVertex;
-
 public class AppImpression3D {
 
-	private static final String Sommetobjet = null;
+/*	private static final String Sommetobjet = null;
 	static Graphics2D g;
 	static BufferedImage im = null;
 	static BufferedImage imgtranche = null;
@@ -33,10 +21,10 @@ public class AppImpression3D {
 		float maxY = -5000;
 		float minZ = 10;
 		float maxZ = 0;
-		
+		*/
 						 // *** on recupere des boites englobant   ***
 		
-		for(FaceVertex vertex : sommetObjet ){
+		/*for(FaceVertex vertex : sommetObjet ){
 				minZ = Math.min( minZ,vertex.v.z );
 				maxZ = Math.max( maxZ, vertex.v.z );
 		}
@@ -81,13 +69,13 @@ public class AppImpression3D {
 				
 				
 			}
-			
+			*/
 			
 			/***            On affiches les differentes tranches ( actuelles et precedentes)           ****/
 			
 			
 			
-			listeTranches.add(t);
+			/*listeTranches.add(t);
 			
 			Color c = new Color(255,255,0);
 			
@@ -135,5 +123,5 @@ public class AppImpression3D {
 		return im;
 	}
 	
-	
+	*/
 }

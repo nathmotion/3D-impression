@@ -1,9 +1,10 @@
 package fc.PrintingApplication.Students;
 
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -13,6 +14,8 @@ import com.owens.oobjloader.builder.FaceVertex;
 import com.owens.oobjloader.parser.Parse;
 
 public class Application {
+	List<Triangle> trianglesObjet = new ArrayList<>();
+
 	public static void main(String[] argv) {
 		//
 		// This is just example code.
@@ -24,22 +27,31 @@ public class Application {
 		// if(nameFile != null) {
 		//
 		// }else {
-		// String name = "CuteOcto.obj";
+		String name = "CuteOcto.obj";
 		// }
 		BufferedImage bi = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
 		// Graphics2D g = bi.createGraphics();
 		// g.drawLine(10, 15, 35, 40);
 		// g.dispose();
-		AppImpression3D app = new AppImpression3D();
-		bi = app.init();
-		
+		Application application = new Application();
+		// bi = app.init();
+		application.parseObjFile(name);
 		try {
 			ImageIO.write(bi, "png", new File("myImage.png"));
 		} catch (IOException e) {
 			System.out.println("Error saving image ");
+
 		}
 
 		System.out.println("Program terminated.");
+	}
+
+	public void init() {
+
+		// for(FaceVertex vertex : sommetObjet ){
+		// minZ = Math.min( minZ,vertex.v.z );
+		// maxZ = Math.max( maxZ, vertex.v.z );
+		// }
 	}
 
 	//
@@ -74,9 +86,14 @@ public class Application {
 					FaceVertex vertex3 = builder.faceVerticeList.get(vertexIndex3);
 					// Please examine the FaceVertex class and other types for more information on
 					// how to use things
+					Triangle triangle = new Triangle(vertex1,vertex2,vertex3);
+					trianglesObjet.add(triangle);
+					
+					// it is up to I am going to need to change certain things about posting my
+					// content to you guy's, a fair bit of censoring will be needed on here it
+					// seem's but it shouldn't effect the final production.
 
-					// it is up to you here to do whatever you want...
-					//FaceObjet.add(face)
+					// FaceObjet.add(face)
 				}
 			}
 		} catch (java.io.FileNotFoundException e) {
