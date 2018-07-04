@@ -34,8 +34,8 @@ public class Application {
 		// g.drawLine(10, 15, 35, 40);
 		// g.dispose();
 		Application application = new Application();
-		// bi = app.init();
 		application.parseObjFile(name);
+		application.traceTranche(application.trianglesObjet);
 		try {
 			ImageIO.write(bi, "png", new File("myImage.png"));
 		} catch (IOException e) {
@@ -44,14 +44,6 @@ public class Application {
 		}
 
 		System.out.println("Program terminated.");
-	}
-
-	public void init() {
-
-		// for(FaceVertex vertex : sommetObjet ){
-		// minZ = Math.min( minZ,vertex.v.z );
-		// maxZ = Math.max( maxZ, vertex.v.z );
-		// }
 	}
 
 	//
@@ -68,8 +60,6 @@ public class Application {
 				float x = vertex.v.x;
 				float y = vertex.v.y;
 				float z = vertex.v.z;
-				// ...
-				// SommetObjet.add(vertex)
 			}
 			// Enumeration of faces (a face is a triangle fan. Often, but not always, it
 			// only consists of 1 single triangle.)
@@ -92,8 +82,6 @@ public class Application {
 					// it is up to I am going to need to change certain things about posting my
 					// content to you guy's, a fair bit of censoring will be needed on here it
 					// seem's but it shouldn't effect the final production.
-
-					// FaceObjet.add(face)
 				}
 			}
 		} catch (java.io.FileNotFoundException e) {
@@ -104,4 +92,19 @@ public class Application {
 			e.printStackTrace();
 		}
 	}
+	
+	public void traceTranche(List<Triangle> triangleO) {
+		float minZ=999,maxZ=0;
+		
+		for(Triangle triangle : triangleO ){
+			for(FaceVertex f : triangle.getVertex()) {
+			minZ = Math.min( minZ,f.v.z );
+			maxZ = Math.max( maxZ, f.v.z );
+			}
+	}
+		float pTranche = minZ;
+		System.out.println( "zmax"+ maxZ );
+		System.out.println( "zmin"+ minZ );
+	}
+	
 }
