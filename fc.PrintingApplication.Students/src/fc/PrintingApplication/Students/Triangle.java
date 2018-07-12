@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.owens.oobjloader.builder.FaceVertex;
+import com.owens.oobjloader.builder.VertexGeometric;
+import com.owens.oobjloader.builder.VertexNormal;
 
 public class Triangle {
 	List<FaceVertex> vertex = new ArrayList<>();
@@ -47,10 +49,6 @@ public class Triangle {
 
 	public void intersectionTrancheSegment(Float pTranche) {
 
-		ArrayList<FaceVertex> pointTranche = new ArrayList<FaceVertex>();
-
-		// Triangle triangleIntersect = new Triangle();
-
 		float zmax = 0;
 		float zmin = 0;
 		int indMax = 0;
@@ -62,11 +60,10 @@ public class Triangle {
 
 				// detection de zmin et zmax
 
-				zmax = Math.max(vertex.get(2).v.z, vertex.get(0).v.z);
-				zmin = Math.min(vertex.get(2).v.z, vertex.get(0).v.z);
+				zmax = Math.max(this.vertex.get(2).v.z, this.vertex.get(0).v.z);
+				zmin = Math.min(this.vertex.get(2).v.z, this.vertex.get(0).v.z);
 
 				// on regarde le sens du edges
-
 				if (zmax == vertex.get(0).v.z) {
 
 					indMax = 0;
@@ -77,13 +74,12 @@ public class Triangle {
 					indMax = 2;
 					indMin = 0;
 				}
-
 			} else {
 
-				zmax = Math.max(vertex.get(i).v.z, vertex.get(i + 1).v.z);
-				zmin = Math.min(vertex.get(i).v.z, vertex.get(i + 1).v.z);
+				zmax = Math.max(this.vertex.get(i).v.z, this.vertex.get(i + 1).v.z);
+				zmin = Math.min(this.vertex.get(i).v.z, this.vertex.get(i + 1).v.z);
 
-				if (zmax == vertex.get(i).v.z) {
+				if (zmax == this.vertex.get(i).v.z) {
 
 					indMax = i;
 					indMin = i + 1;
@@ -93,26 +89,26 @@ public class Triangle {
 					indMax = i + 1;
 					indMin = i;
 				}
-
 			}
 
 			if ((pTranche > zmin && pTranche < zmax)) // ** test qu'il y a possibilit� d'intersection pour cette face
 			{
 				// **Theoreme de thales
-				float t = (pTranche - vertex.get(indMin).v.z) / (vertex.get(indMax).v.z - vertex.get(indMin).v.z);
+				float t = (pTranche - this.vertex.get(indMin).v.z)
+						/ (this.vertex.get(indMax).v.z - this.vertex.get(indMin).v.z);
 
 				if (t <= 1 && t >= 0) {
 					float x = 0;
 					float y = 0;
-					float z = 0;
-
-					x = vertex.get(indMin).v.x + (vertex.get(indMax).v.x - vertex.get(indMin).v.x) * t;
-					y = vertex.get(indMin).v.y + (vertex.get(indMax).v.y - vertex.get(indMin).v.y) * t;
+					x = vertex.get(indMin).v.x + (this.vertex.get(indMax).v.x - this.vertex.get(indMin).v.x) * t;
+					y = vertex.get(indMin).v.y + (this.vertex.get(indMax).v.y - this.vertex.get(indMin).v.y) * t;
 					FaceVertex tmp = new FaceVertex();
+					tmp.n=new VertexNormal(0, 0, 0);
+					tmp.v= new VertexGeometric(0, 0, 0);
 					tmp.v.x = x;
 					tmp.v.y = y;
 					tmp.v.z = pTranche;
-					pointIntersection.add(tmp);
+					this.pointIntersection.add(tmp);
 
 				} // end if
 

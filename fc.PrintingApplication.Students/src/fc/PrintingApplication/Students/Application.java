@@ -15,6 +15,8 @@ import com.owens.oobjloader.parser.Parse;
 
 public class Application {
 	List<Triangle> trianglesObjet = new ArrayList<>();
+	static final int widthImg = 800;
+	static final int heightImg = 800;
 
 	public static void main(String[] argv) {
 		//
@@ -76,9 +78,9 @@ public class Application {
 					FaceVertex vertex3 = builder.faceVerticeList.get(vertexIndex3);
 					// Please examine the FaceVertex class and other types for more information on
 					// how to use things
-					Triangle triangle = new Triangle(vertex1,vertex2,vertex3);
+					Triangle triangle = new Triangle(vertex1, vertex2, vertex3);
 					trianglesObjet.add(triangle);
-					
+
 					// it is up to I am going to need to change certain things about posting my
 					// content to you guy's, a fair bit of censoring will be needed on here it
 					// seem's but it shouldn't effect the final production.
@@ -92,19 +94,32 @@ public class Application {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void traceTranche(List<Triangle> triangleO) {
-		float minZ=999,maxZ=0;
-		
-		for(Triangle triangle : triangleO ){
-			for(FaceVertex f : triangle.getVertex()) {
-			minZ = Math.min( minZ,f.v.z );
-			maxZ = Math.max( maxZ, f.v.z );
+		float minZ = 999, maxZ = 0;
+
+		for (Triangle triangle : triangleO) {
+			for (FaceVertex f : triangle.getVertex()) {
+				minZ = Math.min(minZ, f.v.z);
+				maxZ = Math.max(maxZ, f.v.z);
 			}
-	}
+
+		}
 		float pTranche = minZ;
-		System.out.println( "zmax"+ maxZ );
-		System.out.println( "zmin"+ minZ );
+		System.out.println("zmax" + maxZ);
+		System.out.println("zmin" + minZ);
+		float currentTranche = 0;
+		BufferedImage currentTrancheImage;
+		while (pTranche < maxZ) {
+			currentTrancheImage = new BufferedImage(widthImg, heightImg, BufferedImage.TYPE_INT_RGB);
+			for (Triangle t : triangleO) {
+				t.intersectionTrancheSegment(pTranche);
+				if (t.pointIntersection.size() == 2) {
+				}
+			}
+			pTranche = (float) (pTranche + 0.20);
+			System.out.println("Tranche position " + pTranche);
+		}
 	}
-	
+
 }
