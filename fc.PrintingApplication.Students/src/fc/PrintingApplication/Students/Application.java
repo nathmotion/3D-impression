@@ -1,5 +1,7 @@
 package fc.PrintingApplication.Students;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -11,12 +13,15 @@ import javax.imageio.ImageIO;
 import com.owens.oobjloader.builder.Build;
 import com.owens.oobjloader.builder.Face;
 import com.owens.oobjloader.builder.FaceVertex;
+import com.owens.oobjloader.builder.VertexGeometric;
 import com.owens.oobjloader.parser.Parse;
 
 public class Application {
 	List<Triangle> trianglesObjet = new ArrayList<>();
-	static final int widthImg = 800;
-	static final int heightImg = 800;
+	static final int widthImg = 100;
+	static final int heightImg = 100;
+	static float zminObj;
+	static float zmaxObj;
 
 	public static void main(String[] argv) {
 		//
@@ -31,13 +36,15 @@ public class Application {
 		// }else {
 		String name = "CuteOcto.obj";
 		// }
-		BufferedImage bi = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
-		// Graphics2D g = bi.createGraphics();
-		// g.drawLine(10, 15, 35, 40);
-		// g.dispose();
 		Application application = new Application();
 		application.parseObjFile(name);
 		application.traceTranche(application.trianglesObjet);
+
+		BufferedImage bi = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = bi.createGraphics();
+		g.drawLine(10, 15, 35, 40);
+		g.dispose();
+
 		try {
 			ImageIO.write(bi, "png", new File("myImage.png"));
 		} catch (IOException e) {
@@ -96,27 +103,44 @@ public class Application {
 	}
 
 	public void traceTranche(List<Triangle> triangleO) {
-		float minZ = 999, maxZ = 0;
+		zminObj = 999;
+		zmaxObj = 0;
 
 		for (Triangle triangle : triangleO) {
 			for (FaceVertex f : triangle.getVertex()) {
-				minZ = Math.min(minZ, f.v.z);
-				maxZ = Math.max(maxZ, f.v.z);
+				zminObj = Math.min(zminObj, f.v.z);
+				zmaxObj = Math.max(zmaxObj, f.v.z);
 			}
 
 		}
-		float pTranche = minZ;
-		System.out.println("zmax" + maxZ);
-		System.out.println("zmin" + minZ);
+		float pTranche = zminObj;
+		System.out.println("zmax" + zmaxObj);
+		System.out.println("zmin" + zminObj);
 		float currentTranche = 0;
 		BufferedImage currentTrancheImage;
-		while (pTranche < maxZ) {
+		while (pTranche < zmaxObj) {
+			currentTranche++;
 			currentTrancheImage = new BufferedImage(widthImg, heightImg, BufferedImage.TYPE_INT_RGB);
-			for (Triangle t : triangleO) {
-				t.intersectionTrancheSegment(pTranche);
-				if (t.pointIntersection.size() == 2) {
+			Graphics2D g = currentTrancheImage.createGraphics();
+			for (Triangle triangle : triangleO) {
+				triangle.intersectionTrancheSegment(pTranche);
+				g.setColor(Color.GREEN);
+				if(triangle.pointIntersection.size()!=0) {
+					VertexGeometric p1 = triangle.pointIntersection.get(0).v;
+					VertexGeometric p2 = triangle.pointIntersection.get(1).v;
+					g.drawLine((int)p1.x+20,(int) p1.y+20,(int) p2.x+20,(int) p2.y+20);
 				}
+			
 			}
+		
+			g.dispose();
+			try {
+				ImageIO.write(currentTrancheImage, "png", new File("tranche"+currentTranche+".png"));
+			} catch (IOException e) {
+				System.out.println("Error saving image ");
+
+			}
+
 			pTranche = (float) (pTranche + 0.20);
 			System.out.println("Tranche position " + pTranche);
 		}
