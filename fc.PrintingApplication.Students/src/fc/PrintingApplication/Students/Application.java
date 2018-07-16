@@ -17,9 +17,11 @@ import com.owens.oobjloader.builder.VertexGeometric;
 import com.owens.oobjloader.parser.Parse;
 
 public class Application {
-	List<Triangle> trianglesObjet = new ArrayList<>();
-	static final int widthImg = 100;
-	static final int heightImg = 100;
+	List<Triangle> listetrianglesTrancheObjet = new ArrayList<>();
+	List<Face> listeFaceObjet = new ArrayList<>();
+	List<FaceVertex> listeSommetObjet = new ArrayList<>();
+	static final int widthImg = 300;
+	static final int heightImg = 300;
 	static float zminObj;
 	static float zmaxObj;
 
@@ -38,9 +40,9 @@ public class Application {
 		// }
 		Application application = new Application();
 		application.parseObjFile(name);
-		application.traceTranche(application.trianglesObjet);
+		application.traceTranche(application.listeSommetObjet, application.listeFaceObjet);
 
-		BufferedImage bi = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+		BufferedImage bi = new BufferedImage(widthImg, widthImg, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = bi.createGraphics();
 		g.drawLine(10, 15, 35, 40);
 		g.dispose();
@@ -69,6 +71,7 @@ public class Application {
 				float x = vertex.v.x;
 				float y = vertex.v.y;
 				float z = vertex.v.z;
+				listeSommetObjet.add(vertex);
 			}
 			// Enumeration of faces (a face is a triangle fan. Often, but not always, it
 			// only consists of 1 single triangle.)
@@ -85,8 +88,7 @@ public class Application {
 					FaceVertex vertex3 = builder.faceVerticeList.get(vertexIndex3);
 					// Please examine the FaceVertex class and other types for more information on
 					// how to use things
-					Triangle triangle = new Triangle(vertex1, vertex2, vertex3);
-					trianglesObjet.add(triangle);
+					listeFaceObjet.add(face);
 
 					// it is up to I am going to need to change certain things about posting my
 					// content to you guy's, a fair bit of censoring will be needed on here it
@@ -102,17 +104,20 @@ public class Application {
 		}
 	}
 
-	public void traceTranche(List<Triangle> triangleO) {
+	public static void updateTriangleTrancheObjet() {
+
+	}
+
+	public void traceTranche(List<FaceVertex> listeSommetObjet, List<Face> listeFaceObjet) {
 		zminObj = 999;
 		zmaxObj = 0;
-
-		for (Triangle triangle : triangleO) {
-			for (FaceVertex f : triangle.getVertex()) {
-				zminObj = Math.min(zminObj, f.v.z);
-				zmaxObj = Math.max(zmaxObj, f.v.z);
-			}
-
+		// parcours la liste complète des tous les sommet de l'Objet pour trouve le min
+		// et max de l'axis de Z
+		for (FaceVertex f : listeSommetObjet) {
+			zminObj = Math.min(zminObj, f.v.z);
+			zmaxObj = Math.max(zmaxObj, f.v.z);
 		}
+
 		float pTranche = zminObj;
 		System.out.println("zmax" + zmaxObj);
 		System.out.println("zmin" + zminObj);
@@ -122,20 +127,22 @@ public class Application {
 			currentTranche++;
 			currentTrancheImage = new BufferedImage(widthImg, heightImg, BufferedImage.TYPE_INT_RGB);
 			Graphics2D g = currentTrancheImage.createGraphics();
-			for (Triangle triangle : triangleO) {
+			for (Face face : listeFaceObjet) {
+				Triangle triangle = new Triangle();
+				for (FaceVertex vertex : face.vertices) {
+					triangle.sommet.add(new VertexGeometric(vertex.v.x, vertex.v.y, vertex.v.z));
+				}
 				triangle.intersectionTrancheSegment(pTranche);
 				g.setColor(Color.GREEN);
-				if(triangle.pointIntersection.size()!=0) {
-					VertexGeometric p1 = triangle.pointIntersection.get(0).v;
-					VertexGeometric p2 = triangle.pointIntersection.get(1).v;
-					g.drawLine((int)p1.x+20,(int) p1.y+20,(int) p2.x+20,(int) p2.y+20);
+				if (triangle.pointIntersection.size() == 2) {
+					listetrianglesTrancheObjet.add(triangle);
 				}
-			
+
 			}
-		
+			currentTrancheImage = traceTranche(currentTrancheImage, listetrianglesTrancheObjet, Color.CYAN);
 			g.dispose();
 			try {
-				ImageIO.write(currentTrancheImage, "png", new File("tranche"+currentTranche+".png"));
+				ImageIO.write(currentTrancheImage, "png", new File("tranche" + currentTranche + ".png"));
 			} catch (IOException e) {
 				System.out.println("Error saving image ");
 
@@ -144,6 +151,17 @@ public class Application {
 			pTranche = (float) (pTranche + 0.20);
 			System.out.println("Tranche position " + pTranche);
 		}
+	}
+
+	static BufferedImage traceTranche(BufferedImage im, List<Triangle> listetriangle, Color c) {
+		System.out.println(" tranche size " + listetriangle.size());
+		for (Triangle triangle : listetriangle) {
+			im.setRGB((int) (triangle.pointIntersection.get(0).v.x + 40) * 5,
+					(int) (triangle.pointIntersection.get(0).v.y + 40) * 5, Color.GREEN.getRGB());
+			im.setRGB((int) (triangle.pointIntersection.get(1).v.x + 40) * 5,
+					(int) (triangle.pointIntersection.get(1).v.y + 40) * 5, Color.RED.getRGB());
+		}
+		return im;
 	}
 
 }
