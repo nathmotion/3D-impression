@@ -17,7 +17,7 @@ import com.owens.oobjloader.builder.VertexGeometric;
 import com.owens.oobjloader.parser.Parse;
 
 public class Application {
-	List<Triangle> listetrianglesTrancheObjet = new ArrayList<>();
+	List<Tranche> listTranche = new ArrayList<>();
 	List<Face> listeFaceObjet = new ArrayList<>();
 	List<FaceVertex> listeSommetObjet = new ArrayList<>();
 	static final int widthImg = 300;
@@ -124,6 +124,7 @@ public class Application {
 		float currentTranche = 0;
 		BufferedImage currentTrancheImage;
 		while (pTranche < zmaxObj) {
+			Tranche tranche = new Tranche();
 			currentTranche++;
 			currentTrancheImage = new BufferedImage(widthImg, heightImg, BufferedImage.TYPE_INT_RGB);
 			Graphics2D g = currentTrancheImage.createGraphics();
@@ -135,11 +136,12 @@ public class Application {
 				triangle.intersectionTrancheSegment(pTranche);
 				g.setColor(Color.GREEN);
 				if (triangle.pointIntersection.size() == 2) {
-					listetrianglesTrancheObjet.add(triangle);
+					tranche.listetrianglesTrancheObjet.add(triangle);
+					// listTranche.add(tranche);
 				}
 
 			}
-			currentTrancheImage = traceTranche(currentTrancheImage, listetrianglesTrancheObjet, Color.CYAN);
+			currentTrancheImage = traceTranche(currentTrancheImage, tranche.listetrianglesTrancheObjet, g);
 			g.dispose();
 			try {
 				ImageIO.write(currentTrancheImage, "png", new File("tranche" + currentTranche + ".png"));
@@ -153,13 +155,17 @@ public class Application {
 		}
 	}
 
-	static BufferedImage traceTranche(BufferedImage im, List<Triangle> listetriangle, Color c) {
+	static BufferedImage traceTranche(BufferedImage im, List<Triangle> listetriangle, Graphics2D g) {
 		System.out.println(" tranche size " + listetriangle.size());
 		for (Triangle triangle : listetriangle) {
-			im.setRGB((int) (triangle.pointIntersection.get(0).v.x + 40) * 5,
-					(int) (triangle.pointIntersection.get(0).v.y + 40) * 5, Color.GREEN.getRGB());
-			im.setRGB((int) (triangle.pointIntersection.get(1).v.x + 40) * 5,
-					(int) (triangle.pointIntersection.get(1).v.y + 40) * 5, Color.RED.getRGB());
+			int x1 = (int) (triangle.pointIntersection.get(0).v.x + 40) * 5;
+			int y1 = (int) (triangle.pointIntersection.get(0).v.y + 40) * 5;
+			int x2 = (int) (triangle.pointIntersection.get(1).v.x + 40) * 5;
+			int y2 = (int) (triangle.pointIntersection.get(1).v.y + 40) * 5;
+			g.setColor(Color.CYAN);
+			g.drawLine(x1, y1, x2, y2);
+			im.setRGB(x1, y1, Color.GREEN.getRGB());
+			im.setRGB(x2, y2, Color.RED.getRGB());
 		}
 		return im;
 	}
