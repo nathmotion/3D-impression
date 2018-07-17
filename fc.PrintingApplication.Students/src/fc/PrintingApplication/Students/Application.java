@@ -158,10 +158,10 @@ public class Application {
 	static BufferedImage traceTranche(BufferedImage im, List<Triangle> listetriangle, Graphics2D g) {
 		System.out.println(" tranche size " + listetriangle.size());
 		for (Triangle triangle : listetriangle) {
-			int x1 = (int) (triangle.pointIntersection.get(0).v.x + 40) * 5;
-			int y1 = (int) (triangle.pointIntersection.get(0).v.y + 40) * 5;
-			int x2 = (int) (triangle.pointIntersection.get(1).v.x + 40) * 5;
-			int y2 = (int) (triangle.pointIntersection.get(1).v.y + 40) * 5;
+			int x1 = (int) ((triangle.pointIntersection.get(0).v.x + 40) * 500)/100;
+			int y1 = (int) ((triangle.pointIntersection.get(0).v.y + 40) * 500)/100;
+			int x2 = (int) ((triangle.pointIntersection.get(1).v.x + 40) * 500)/100;
+			int y2 = (int) ((triangle.pointIntersection.get(1).v.y + 40) * 500)/100;
 			g.setColor(Color.CYAN);
 			g.drawLine(x1, y1, x2, y2);
 			im.setRGB(x1, y1, Color.GREEN.getRGB());
