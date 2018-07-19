@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.attribute.FileOwnerAttributeView;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -142,6 +143,7 @@ public class Application {
 
 			}
 			currentTrancheImage = traceTranche(currentTrancheImage, tranche.listetrianglesTrancheObjet, g);
+			currentTrancheImage = remplissageScanline(currentTrancheImage);
 			g.dispose();
 			try {
 				ImageIO.write(currentTrancheImage, "png", new File("tranche" + currentTranche + ".png"));
@@ -158,16 +160,52 @@ public class Application {
 	static BufferedImage traceTranche(BufferedImage im, List<Triangle> listetriangle, Graphics2D g) {
 		System.out.println(" tranche size " + listetriangle.size());
 		for (Triangle triangle : listetriangle) {
-			int x1 = (int) ((triangle.pointIntersection.get(0).v.x + 40) * 500)/100;
-			int y1 = (int) ((triangle.pointIntersection.get(0).v.y + 40) * 500)/100;
-			int x2 = (int) ((triangle.pointIntersection.get(1).v.x + 40) * 500)/100;
-			int y2 = (int) ((triangle.pointIntersection.get(1).v.y + 40) * 500)/100;
+			int x1 = (int) ((triangle.pointIntersection.get(0).v.x + 40) * 500) / 100;
+			int y1 = (int) ((triangle.pointIntersection.get(0).v.y + 40) * 500) / 100;
+			int x2 = (int) ((triangle.pointIntersection.get(1).v.x + 40) * 500) / 100;
+			int y2 = (int) ((triangle.pointIntersection.get(1).v.y + 40) * 500) / 100;
 			g.setColor(Color.CYAN);
 			g.drawLine(x1, y1, x2, y2);
-			im.setRGB(x1, y1, Color.GREEN.getRGB());
-			im.setRGB(x2, y2, Color.RED.getRGB());
+			// im.setRGB(x1, y1, Color.GREEN.getRGB());
+			// im.setRGB(x2, y2, Color.G.getRGB());
 		}
 		return im;
 	}
 
+	BufferedImage remplissageScanline(BufferedImage im) {
+
+		int ymin = 999;
+		int ymax = 0;
+		
+		// parcours tout les *
+		for (int i = 0; i < im.getHeight(); i++) {
+			for (int j = 0; j < im.getWidth(); j++) {
+				int yCurrent = i;
+				if (ymin > yCurrent && im.getRGB(j, i)==Color.CYAN.getRGB()) {
+					ymin = yCurrent;
+				}
+				if (ymax < yCurrent && im.getRGB(j, i)==Color.CYAN.getRGB()) {
+					ymax = yCurrent;
+				}
+			}
+		}
+	
+		System.out.println(" ymin =" + ymin + " ymax=" + ymax);
+		for (int i = ymin; i < ymax; i++) {
+			int countArretetouche = 0;
+			for (int j = 0; j < im.getWidth(); j++) {
+				int colorCurrent =im.getRGB(j, i);
+				
+				
+				if (colorCurrent == Color.CYAN.getRGB()) {
+					countArretetouche++;
+				}
+				if (countArretetouche % 2 != 0) {
+					im.setRGB(j, i, Color.red.getRGB());
+				}
+				
+			}
+		}
+		return im;
+	}
 }
