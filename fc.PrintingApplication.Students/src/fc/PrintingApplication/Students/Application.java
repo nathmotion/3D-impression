@@ -2,6 +2,7 @@ package fc.PrintingApplication.Students;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -10,11 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.swing.text.StyledEditorKit.ForegroundAction;
 
 import com.owens.oobjloader.builder.Build;
 import com.owens.oobjloader.builder.Face;
 import com.owens.oobjloader.builder.FaceVertex;
 import com.owens.oobjloader.builder.VertexGeometric;
+import com.owens.oobjloader.builder.VertexNormal;
 import com.owens.oobjloader.parser.Parse;
 
 public class Application {
@@ -112,7 +115,7 @@ public class Application {
 	public void traceTranche(List<FaceVertex> listeSommetObjet, List<Face> listeFaceObjet) {
 		zminObj = 999;
 		zmaxObj = 0;
-		// parcours la liste complète des tous les sommet de l'Objet pour trouve le min
+		// parcours la liste complÃ¨te des tous les sommet de l'Objet pour trouve le min
 		// et max de l'axis de Z
 		for (FaceVertex f : listeSommetObjet) {
 			zminObj = Math.min(zminObj, f.v.z);
@@ -138,7 +141,7 @@ public class Application {
 				g.setColor(Color.GREEN);
 				if (triangle.pointIntersection.size() == 2) {
 					tranche.listetrianglesTrancheObjet.add(triangle);
-					// listTranche.add(tranche);
+					listTranche.add(tranche);
 				}
 
 			}
@@ -160,10 +163,10 @@ public class Application {
 	static BufferedImage traceTranche(BufferedImage im, List<Triangle> listetriangle, Graphics2D g) {
 		System.out.println(" tranche size " + listetriangle.size());
 		for (Triangle triangle : listetriangle) {
-			int x1 = (int) ((triangle.pointIntersection.get(0).v.x + 40) * 500) / 100;
-			int y1 = (int) ((triangle.pointIntersection.get(0).v.y + 40) * 500) / 100;
-			int x2 = (int) ((triangle.pointIntersection.get(1).v.x + 40) * 500) / 100;
-			int y2 = (int) ((triangle.pointIntersection.get(1).v.y + 40) * 500) / 100;
+			int x1 = (int) ((triangle.pointIntersection.get(0).v.x + 20) * 700) / 100;
+			int y1 = (int) ((triangle.pointIntersection.get(0).v.y + 20) * 700) / 100;
+			int x2 = (int) ((triangle.pointIntersection.get(1).v.x + 20) * 700) / 100;
+			int y2 = (int) ((triangle.pointIntersection.get(1).v.y + 20) * 700) / 100;
 			g.setColor(Color.CYAN);
 			g.drawLine(x1, y1, x2, y2);
 			// im.setRGB(x1, y1, Color.GREEN.getRGB());
@@ -176,36 +179,67 @@ public class Application {
 
 		int ymin = 999;
 		int ymax = 0;
-		
 		// parcours tout les *
 		for (int i = 0; i < im.getHeight(); i++) {
 			for (int j = 0; j < im.getWidth(); j++) {
 				int yCurrent = i;
-				if (ymin > yCurrent && im.getRGB(j, i)==Color.CYAN.getRGB()) {
+				if (ymin > yCurrent && im.getRGB(j, i) == Color.CYAN.getRGB()) {
 					ymin = yCurrent;
 				}
-				if (ymax < yCurrent && im.getRGB(j, i)==Color.CYAN.getRGB()) {
+				if (ymax < yCurrent && im.getRGB(j, i) == Color.CYAN.getRGB()) {
 					ymax = yCurrent;
 				}
 			}
 		}
-	
-		System.out.println(" ymin =" + ymin + " ymax=" + ymax);
-		for (int i = ymin; i < ymax; i++) {
-			int countArretetouche = 0;
-			for (int j = 0; j < im.getWidth(); j++) {
-				int colorCurrent =im.getRGB(j, i);
-				
-				
-				if (colorCurrent == Color.CYAN.getRGB()) {
-					countArretetouche++;
-				}
-				if (countArretetouche % 2 != 0) {
-					im.setRGB(j, i, Color.red.getRGB());
-				}
-				
-			}
+		for(int i=0;i<listTranche.size();i++) intersectionSegment(i, ymin, ymax);
+
+		for (int i = ymin + 1; i < ymax; i++) {
+		
 		}
 		return im;
 	}
+	
+	public void intersectionSegment(int pTranche,int zmin,int zmax) {
+
+			int i =0;
+			float yMax;
+			float yMin;
+			for(Triangle triangle : listTranche.get(pTranche).listetrianglesTrancheObjet) {
+					float xP1= triangle.pointIntersection.get(0).v.x;
+					float yP1= triangle.pointIntersection.get(0).v.y;
+					float xP2= triangle.pointIntersection.get(0).v.x;
+					float yP2= triangle.pointIntersection.get(0).v.y;
+					
+					
+			}
+
+		
+//			if ((pTranche > zmin && pTranche < zmax)) // ** test qu'il y a possibilitï¿½ d'intersection pour cette face
+//			{
+//				// **Theoreme de thales
+//				float t = (pTranche - this.sommet.get(indMin).z)
+//						/ (this.sommet.get(indMax).z - this.sommet.get(indMin).z);
+//
+//				if (t <= 1 && t >= 0) {
+//					float x = 0;
+//					float y = 0;
+//					x = this.sommet.get(indMin).x + (this.sommet.get(indMax).x - this.sommet.get(indMin).x) * t;
+//					y = this.sommet.get(indMin).y + (this.sommet.get(indMax).y - this.sommet.get(indMin).y) * t;
+//					FaceVertex tmp = new FaceVertex();
+//					tmp.n = new VertexNormal(0, 0, 0);
+//					tmp.v = new VertexGeometric(0, 0, 0);
+//					tmp.v.x = x;
+//					tmp.v.y = y;
+//					tmp.v.z = pTranche;
+//					this.pointIntersection.add(tmp);
+//
+//				} // end if
+//
+//			} // end if
+//
+//		} // end For
+
+	}// end
+
+	
 }
