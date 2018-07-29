@@ -6,6 +6,7 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.file.attribute.FileOwnerAttributeView;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +45,7 @@ public class Application {
 		// }
 		Application application = new Application();
 		application.parseObjFile(name);
-		application.traceTranche(application.listeSommetObjet, application.listeFaceObjet);
+		application.doTranche(application.listeSommetObjet, application.listeFaceObjet);
 
 		BufferedImage bi = new BufferedImage(widthImg, widthImg, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = bi.createGraphics();
@@ -112,7 +113,7 @@ public class Application {
 
 	}
 
-	public void traceTranche(List<FaceVertex> listeSommetObjet, List<Face> listeFaceObjet) {
+	public void doTranche(List<FaceVertex> listeSommetObjet, List<Face> listeFaceObjet) {
 		zminObj = 999;
 		zmaxObj = 0;
 		// parcours la liste complète des tous les sommet de l'Objet pour trouve le min
@@ -145,8 +146,8 @@ public class Application {
 				}
 
 			}
-			currentTrancheImage = traceTranche(currentTrancheImage, tranche.listetrianglesTrancheObjet, g);
-			currentTrancheImage = remplissageScanline(currentTrancheImage);
+			currentTrancheImage = traceLineTranche(currentTrancheImage, tranche.listetrianglesTrancheObjet, g);
+			currentTrancheImage = remplissageScanline(tranche.listetrianglesTrancheObjet, currentTrancheImage);
 			g.dispose();
 			try {
 				ImageIO.write(currentTrancheImage, "png", new File("tranche" + currentTranche + ".png"));
@@ -160,7 +161,7 @@ public class Application {
 		}
 	}
 
-	static BufferedImage traceTranche(BufferedImage im, List<Triangle> listetriangle, Graphics2D g) {
+	static BufferedImage traceLineTranche(BufferedImage im, List<Triangle> listetriangle, Graphics2D g) {
 		System.out.println(" tranche size " + listetriangle.size());
 		for (Triangle triangle : listetriangle) {
 			int x1 = (int) ((triangle.pointIntersection.get(0).v.x + 20) * 700) / 100;
@@ -175,97 +176,82 @@ public class Application {
 		return im;
 	}
 
-	BufferedImage remplissageScanline(BufferedImage im) {
+	BufferedImage remplissageScanline(List<Triangle> triangles, BufferedImage im) {
 
-		int ymin = 999;
-		int ymax = 0;
+		float ymin = 999;
+		float ymax = 0;
+
 		// parcours tout les *
-		for (int i = 0; i < im.getHeight(); i++) {
-			for (int j = 0; j < im.getWidth(); j++) {
-				int yCurrent = i;
-				if (ymin > yCurrent && im.getRGB(j, i) == Color.CYAN.getRGB()) {
-					ymin = yCurrent;
-				}
-				if (ymax < yCurrent && im.getRGB(j, i) == Color.CYAN.getRGB()) {
-					ymax = yCurrent;
-				}
+		for (int i = 0; i < triangles.size(); i++) {
+			for (int j = 0; j < triangles.get(i).pointIntersection.size(); j++) {
+				ymin = Math.min(ymin, triangles.get(i).pointIntersection.get(j).v.y);
+				ymax = Math.max(ymax, triangles.get(i).pointIntersection.get(j).v.y);
 			}
 		}
-		for (int i = 0; i < listTranche.size(); i++)
-			intersectionSegment(i, ymin, ymax);
 
-		for (int i = ymin + 1; i < ymax; i++) {
+		im = intersectionSegment(triangles, ymin, ymax, im);
 
-		}
 		return im;
 	}
 
-	public void intersectionSegment(int pTranche, int zmin, int zmax) {
+	public BufferedImage intersectionSegment(List<Triangle> triangles, float ymin, float ymax, BufferedImage im) {
 
-		float yMax = 0;
-		float yMin = 999;
-		int indMax=0;
-		int indMin=1;
-		for (Triangle triangle : listTranche.get(pTranche).listetrianglesTrancheObjet) {
-			float xP1 = triangle.pointIntersection.get(0).v.x;
-			float yP1 = triangle.pointIntersection.get(0).v.y;
-			float xP2 = triangle.pointIntersection.get(1).v.x;
-			float yP2 = triangle.pointIntersection.get(1).v.y;
+		int indMax = 0;
+		int indMin = 1;
+		
+			int ymaxInt = (int) ((ymax + 20) * 700) / 100;
+			int yminInt = (int) ((ymin + 20) * 700) / 100;
+			
+			for (float pas = ymin; pas < ymax; pas++) {
+				List<Float> listX = new ArrayList<>();
+				for (Triangle triangle : triangles) {
+					float xP1 = triangle.pointIntersection.get(0).v.x;
+					float yP1 = triangle.pointIntersection.get(0).v.y;
+					float xP2 = triangle.pointIntersection.get(1).v.x;
+					float yP2 = triangle.pointIntersection.get(1).v.y;
+					if (yP1 > yP2) {
+						indMax = 0;
+						indMin = 1;
+					} else {
+						indMax = 1;
+						indMin = 0;
+					}
 
-			yMax = Math.max(Math.max(yMax, yP1), yP2);
-			yMin = Math.min(Math.min(yMax, yP1), yP2);
-			if(yP1>yP2) {
-				indMax=0;
-				indMin=1;
-			}
-			else {
-				indMax=1;
-				indMin=0;
-			}
-			xP1 = triangle.pointIntersection.get(indMin).v.x;
-			 yP1 = triangle.pointIntersection.get(indMin).v.y;
-			 xP2 = triangle.pointIntersection.get(indMax).v.x;
-			 yP2 = triangle.pointIntersection.get(indMax).v.y;
-			if ((pTranche > yMin && pTranche < yMax)) {
-				float t = (pTranche-yP1)/(yP2-yP1);
-				if(t<=1 && t>=0) {
-					float x=0;
-					float y=0;
-					x= xP1+ (xP2-xP1)*t;
-					y=pTranche;
+					xP1 = triangle.pointIntersection.get(indMin).v.x;
+					yP1 = triangle.pointIntersection.get(indMin).v.y;
+					xP2 = triangle.pointIntersection.get(indMax).v.x;
+					yP2 = triangle.pointIntersection.get(indMax).v.y;
+			
+					if(pas>yP1 && pas<yP2) {
 					
+						float t = (pas- yP1) / (yP2 - yP1);
+						
+						if (t <= 1 && t >= 0) {
+							float x = 0;
+							float y = 0;
+							x = xP1 + (xP2 - xP1) * t;
+							y = pas;
+							listX.add(x);
+						if(listX.size()==2) {
+							float xmax = Math.max(Math.max(0, listX.get(0)), listX.get(1));
+							float xmin = Math.min(Math.min(999, listX.get(0)), listX.get(1));
+							int IndXmax = (int) ((xmax + 20) * 700) / 100;
+							;
+							int IndXmin = (int) ((xmin + 20) * 700) / 100;
+							;
+							IndXmin++;
+							IndXmax--;
+							for (int j = IndXmin; j <= IndXmax; j++) {
+								im.setRGB(j, (int) ((pas+20)*700)/100, Color.red.getRGB());
+							}
+
+						}
+						}
+					}
 				}
 			}
-		}
+		
+		return im;
 
-		// if ((pTranche > zmin && pTranche < zmax)) // ** test qu'il y a possibilit�
-		// d'intersection pour cette face
-		// {
-		// // **Theoreme de thales
-		// float t = (pTranche - this.sommet.get(indMin).z)
-		// / (this.sommet.get(indMax).z - this.sommet.get(indMin).z);
-		//
-		// if (t <= 1 && t >= 0) {
-		// float x = 0;
-		// float y = 0;
-		// x = this.sommet.get(indMin).x + (this.sommet.get(indMax).x -
-		// this.sommet.get(indMin).x) * t;
-		// y = this.sommet.get(indMin).y + (this.sommet.get(indMax).y -
-		// this.sommet.get(indMin).y) * t;
-		// FaceVertex tmp = new FaceVertex();
-		// tmp.n = new VertexNormal(0, 0, 0);
-		// tmp.v = new VertexGeometric(0, 0, 0);
-		// tmp.v.x = x;
-		// tmp.v.y = y;
-		// tmp.v.z = pTranche;
-		// this.pointIntersection.add(tmp);
-		//
-		// } // end if
-		//
-		// } // end if
-		//
-		// } // end For
-
-	}// end
-
+	}
 }
