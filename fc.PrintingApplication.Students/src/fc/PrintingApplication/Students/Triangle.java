@@ -11,7 +11,6 @@ import com.owens.oobjloader.builder.VertexNormal;
 public class Triangle {
 	List<VertexGeometric> sommet = new ArrayList<>();
 	List<FaceVertex> pointIntersection = new ArrayList<>();
-
 	public Triangle() {
 
 	}
@@ -34,7 +33,20 @@ public class Triangle {
 		}
 
 	}
+	public float maxInter() {
+		for (int i = 0; i < pointIntersection.size(); i++) {
+			ymax = Math.max(sommet.get(i).y, ymax);
+		}
+		return ymax;
+	}
 
+	public float minInter() {
+
+		for (int i = 0; i < pointIntersection.size(); i++) {
+			ymin = Math.min(sommet.get(i).y, ymin);
+		}
+		return ymin;
+	}
 	/***
 	 * 
 	 * -------------------------------------- Detection d'intersection avec la

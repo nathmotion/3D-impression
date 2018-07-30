@@ -179,7 +179,7 @@ public class Application {
 	BufferedImage remplissageScanline(List<Triangle> triangles, BufferedImage im) {
 
 		float ymin = 999;
-		float ymax = 0;
+		float ymax = -999;
 
 		// parcours tout les *
 		for (int i = 0; i < triangles.size(); i++) {
@@ -198,59 +198,75 @@ public class Application {
 
 		int indMax = 0;
 		int indMin = 1;
-		
-			int ymaxInt = (int) ((ymax + 20) * 700) / 100;
-			int yminInt = (int) ((ymin + 20) * 700) / 100;
-			
-			for (float pas = ymin; pas < ymax; pas++) {
-				List<Float> listX = new ArrayList<>();
-				for (Triangle triangle : triangles) {
-					float xP1 = triangle.pointIntersection.get(0).v.x;
-					float yP1 = triangle.pointIntersection.get(0).v.y;
-					float xP2 = triangle.pointIntersection.get(1).v.x;
-					float yP2 = triangle.pointIntersection.get(1).v.y;
-					if (yP1 > yP2) {
-						indMax = 0;
-						indMin = 1;
-					} else {
-						indMax = 1;
-						indMin = 0;
-					}
 
-					xP1 = triangle.pointIntersection.get(indMin).v.x;
-					yP1 = triangle.pointIntersection.get(indMin).v.y;
-					xP2 = triangle.pointIntersection.get(indMax).v.x;
-					yP2 = triangle.pointIntersection.get(indMax).v.y;
-			
-					if(pas>yP1 && pas<yP2) {
-					
-						float t = (pas- yP1) / (yP2 - yP1);
-						
-						if (t <= 1 && t >= 0) {
-							float x = 0;
-							float y = 0;
-							x = xP1 + (xP2 - xP1) * t;
-							y = pas;
-							listX.add(x);
-						if(listX.size()==2) {
-							float xmax = Math.max(Math.max(0, listX.get(0)), listX.get(1));
-							float xmin = Math.min(Math.min(999, listX.get(0)), listX.get(1));
-							int IndXmax = (int) ((xmax + 20) * 700) / 100;
-							;
-							int IndXmin = (int) ((xmin + 20) * 700) / 100;
-							;
-							IndXmin++;
-							IndXmax--;
-							for (int j = IndXmin; j <= IndXmax; j++) {
-								im.setRGB(j, (int) ((pas+20)*700)/100, Color.red.getRGB());
-							}
+		int ymaxInt = (int) ((ymax + 20) * 700) / 100;
+		int yminInt = (int) ((ymin + 20) * 700) / 100;
+		for (Triangle triangle : triangles) {
+			float xP1 = triangle.pointIntersection.get(0).v.x;
+			float yP1 = triangle.pointIntersection.get(0).v.y;
+			float xP2 = triangle.pointIntersection.get(1).v.x;
+			float yP2 = triangle.pointIntersection.get(1).v.y;
+			if (yP1 > yP2) {
+				indMax = 0;
+				indMin = 1;
+			} else {
+				indMax = 1;
+				indMin = 0;
+			}
 
-						}
-						}
-					}
+			xP1 = triangle.pointIntersection.get(indMin).v.x;
+			yP1 = triangle.pointIntersection.get(indMin).v.y;
+			xP2 = triangle.pointIntersection.get(indMax).v.x;
+			yP2 = triangle.pointIntersection.get(indMax).v.y;
+		}
+
+		for (int pas = (int) ((ymin + 20) * 700) / 100; pas < (int) ((ymax + 20) * 700) / 100; pas++) {
+			float xmin = +999;
+			float xmax = -999;
+			int cptX = 0;
+			for (Triangle arrete : triangles) {
+				if (pas >= (int) ((arrete.maxInter() + 20) * 700) / 100
+						&& pas <= (int) ((arrete.minInter() + 20) * 700) / 100) {
+					continue;
+				} else {
+					float Dy = arrete.pointIntersection.get(1).v.y - arrete.pointIntersection.get(0).v.y;
+					float Dx = arrete.pointIntersection.get(1).v.x - arrete.pointIntersection.get(0).v.x;
+					float a = -Dy;
+					float b = Dx;
+					float c = (Dy * arrete.pointIntersection.get(0).v.x) - (Dx * arrete.pointIntersection.get(0).v.y);
+					float x = ((b * pas) - c / a);
+					xmin = Math.min(xmin, x);
+					xmax = Math.max(xmax, x);
+					cptX++;
+				}
+
+			}
+			System.out.println(" x = "+cptX);
+
+			if(cptX==2) {
+				for(int x=(int)((xmin+20)*700)/100;x<(int)((xmax)+20)*700/100;x++) {
+					im.setRGB(x, pas, Color.RED.getRGB());
 				}
 			}
-		
+
+		}
+
+		/*
+		 * if(pas>yP1 && pas<yP2) {
+		 * 
+		 * float t = (pas- yP1) / (yP2 - yP1);
+		 * 
+		 * if (t <= 1 && t >= 0) { float x = 0; float y = 0; x = xP1 + (xP2 - xP1) * t;
+		 * y = pas; listX.add(x); if(listX.size()==2) { float xmax =
+		 * Math.max(Math.max(0, listX.get(0)), listX.get(1)); float xmin =
+		 * Math.min(Math.min(999, listX.get(0)), listX.get(1)); int IndXmax = (int)
+		 * ((xmax + 20) * 700) / 100; ; int IndXmin = (int) ((xmin + 20) * 700) / 100; ;
+		 * IndXmin++; IndXmax--; for (int j = IndXmin; j <= IndXmax; j++) { im.setRGB(j,
+		 * (int) ((pas+20)*700)/100, Color.red.getRGB()); }
+		 * 
+		 * } } }
+		 */
+
 		return im;
 
 	}
