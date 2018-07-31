@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.file.attribute.FileOwnerAttributeView;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -147,7 +148,9 @@ public class Application {
 
 			}
 			currentTrancheImage = traceLineTranche(currentTrancheImage, tranche.listetrianglesTrancheObjet, g);
-			currentTrancheImage = remplissageScanline(tranche.listetrianglesTrancheObjet, currentTrancheImage);
+		//	currentTrancheImage = remplissageScanline( currentTrancheImage);
+			currentTrancheImage=remplissage(tranche.listetrianglesTrancheObjet,currentTrancheImage );
+
 			g.dispose();
 			try {
 				ImageIO.write(currentTrancheImage, "png", new File("tranche" + currentTranche + ".png"));
@@ -159,6 +162,7 @@ public class Application {
 			pTranche = (float) (pTranche + 0.20);
 			System.out.println("Tranche position " + pTranche);
 		}
+		
 	}
 
 	static BufferedImage traceLineTranche(BufferedImage im, List<Triangle> listetriangle, Graphics2D g) {
@@ -170,13 +174,12 @@ public class Application {
 			int y2 = (int) ((triangle.pointIntersection.get(1).v.y + 20) * 700) / 100;
 			g.setColor(Color.CYAN);
 			g.drawLine(x1, y1, x2, y2);
-			// im.setRGB(x1, y1, Color.GREEN.getRGB());
-			// im.setRGB(x2, y2, Color.G.getRGB());
 		}
+		//im=remplissage(listetriangle,im);
 		return im;
 	}
 
-	BufferedImage remplissageScanline(List<Triangle> triangles, BufferedImage im) {
+	static BufferedImage remplissage(List<Triangle> triangles, BufferedImage im) {
 
 		float ymin = 999;
 		float ymax = -999;
@@ -193,63 +196,125 @@ public class Application {
 
 		return im;
 	}
-
-	public BufferedImage intersectionSegment(List<Triangle> triangles, float ymin, float ymax, BufferedImage im) {
-
-		int indMax = 0;
-		int indMin = 1;
-
-		int ymaxInt = (int) ((ymax + 20) * 700) / 100;
-		int yminInt = (int) ((ymin + 20) * 700) / 100;
-		for (Triangle triangle : triangles) {
-			float xP1 = triangle.pointIntersection.get(0).v.x;
-			float yP1 = triangle.pointIntersection.get(0).v.y;
-			float xP2 = triangle.pointIntersection.get(1).v.x;
-			float yP2 = triangle.pointIntersection.get(1).v.y;
-			if (yP1 > yP2) {
-				indMax = 0;
-				indMin = 1;
-			} else {
-				indMax = 1;
-				indMin = 0;
+	BufferedImage remplissageScanline(BufferedImage im) {
+ 		int ymin = 999;
+		int ymax = 0;
+		
+		// parcours tout les *
+		for (int i = 0; i < im.getHeight(); i++) {
+			for (int j = 0; j < im.getWidth(); j++) {
+				int yCurrent = i;
+				if (ymin > yCurrent && im.getRGB(j, i)==Color.CYAN.getRGB()) {
+					ymin = yCurrent;
+				}
+				if (ymax < yCurrent && im.getRGB(j, i)==Color.CYAN.getRGB()) {
+					ymax = yCurrent;
+				}
 			}
-
-			xP1 = triangle.pointIntersection.get(indMin).v.x;
-			yP1 = triangle.pointIntersection.get(indMin).v.y;
-			xP2 = triangle.pointIntersection.get(indMax).v.x;
-			yP2 = triangle.pointIntersection.get(indMax).v.y;
 		}
+	
+		for (int i = ymin; i < ymax; i++) {
+			int countArretetouche = 0;
+			for (int j = 0; j < im.getWidth(); j++) {
+				int colorCurrent =im.getRGB(j, i);
+				
+				
+				if (colorCurrent == Color.CYAN.getRGB()) {
+					if(im.getRGB(j+1,i)!=Color.CYAN.getRGB()) {
+					countArretetouche++;
+					}
+				}
+				if (countArretetouche % 2 != 0) {
+					if(im.getRGB(j,i)!=Color.CYAN.getRGB())
+						{
+						im.setRGB(j, i, Color.red.getRGB());
+						}
+				}
+				
+			}
+		}
+		return im;
+	}
+	public static BufferedImage intersectionSegment(List<Triangle> triangles, float ymin, float ymax, BufferedImage im) {
 
-		for (int pas = (int) ((ymin + 20) * 700) / 100; pas < (int) ((ymax + 20) * 700) / 100; pas++) {
+		int yPolymin = (int) ((ymin + 20) * 700) / 100;
+		int yPolymax = (int) ((ymax + 20) * 700) / 100;
+
+		for (int pas = yPolymin; pas < yPolymax; pas++) {
 			float xmin = +999;
 			float xmax = -999;
 			int cptX = 0;
+	        ArrayList<Point> intersectionPoints = new ArrayList<>();
+
 			for (Triangle arrete : triangles) {
-				if (pas >= (int) ((arrete.maxInter() + 20) * 700) / 100
-						&& pas <= (int) ((arrete.minInter() + 20) * 700) / 100) {
-					continue;
-				} else {
-					float Dy = arrete.pointIntersection.get(1).v.y - arrete.pointIntersection.get(0).v.y;
-					float Dx = arrete.pointIntersection.get(1).v.x - arrete.pointIntersection.get(0).v.x;
-					float a = -Dy;
-					float b = Dx;
-					float c = (Dy * arrete.pointIntersection.get(0).v.x) - (Dx * arrete.pointIntersection.get(0).v.y);
-					float x = ((b * pas) - c / a);
+				int x1, x2, y1, y2;
+	            double deltax, deltay, x;
+	            x1 =(int) ((arrete.pointIntersection.get(0).v.x + 20) * 700) / 100;
+	            y1 = (int) ((arrete.pointIntersection.get(0).v.y + 20) * 700 / 100);
+	            x2 = (int) ((arrete.pointIntersection.get(1).v.x + 20) * 700) / 100;
+	            y2 = (int) ((arrete.pointIntersection.get(1).v.y + 20) * 700 / 100);
+				
+				deltax=x2-x1;
+				deltay=y2-y1;
+				int roundedx;
+				x=x1+deltax/deltay*(pas-y1);
+				roundedx=(int) Math.round(x);
+				if((y1<=pas && y2>pas) || (y2<=pas && y1>pas))
+				{
+					intersectionPoints.add(new Point(roundedx, pas));
+				}
+			}
+			int x1, x2, y1, y2;
+			x1 =(int) ((triangles.get(0).pointIntersection.get(0).v.x + 20) * 700) / 100;
+            y1 = (int) ((triangles.get(0).pointIntersection.get(0).v.y + 20) * 700 / 100);
+            x2 = (int) ((triangles.get(triangles.size()-1).pointIntersection.get(1).v.x + 20) * 700) / 100;
+            y2 = (int) ((triangles.get(triangles.size()-1).pointIntersection.get(1).v.y + 20) * 700 / 100);
+            if ((y1 <= pas && y2 > pas) || (y2 <= pas && y1 > pas)) {
+                intersectionPoints.add(new Point(x1 + (x2 - x1) / (y2 - y1) * pas - y1, pas));
+            }
+            Collections.sort(intersectionPoints,new ComparatorPoint());
+            for(int i=0;i<intersectionPoints.size()-1;i=i+2) {
+            	 x1=intersectionPoints.get(i).x;
+            	 y1=intersectionPoints.get(i).y;
+            	 x2=intersectionPoints.get(i+1).x;
+            	 y2=intersectionPoints.get(i+1).y;
+            	 System.out.println(" Point "+intersectionPoints.size());
+            
+            	Graphics2D g= im.createGraphics();
+            	g.setColor(Color.red);
+            	g.drawLine(x1, y1, x2, y2);
+            }
+		}
+				
+			/*	if (pas < yMaxArrete && pas > yMinArrete) {
+					double Dy = yMaxArrete - yMinArrete;
+					double Dx = x1-x2;
+					int a = -Dy;
+					int b = Dx;
+					int c = (Dy * (int) ((arrete.pointIntersection.get(0).v.x + 20) * 700) / 100
+							- (int) ((arrete.pointIntersection.get(0).v.x + 20) * 700) / 100);
+					int x = (int) ((b * pas) - c / a);
 					xmin = Math.min(xmin, x);
 					xmax = Math.max(xmax, x);
 					cptX++;
 				}
 
 			}
-			System.out.println(" x = "+cptX);
 
-			if(cptX==2) {
-				for(int x=(int)((xmin+20)*700)/100;x<(int)((xmax)+20)*700/100;x++) {
-					im.setRGB(x, pas, Color.RED.getRGB());
-				}
-			}
+			if (cptX >= 2) {
 
-		}
+				int xLineMin = (int) ((xmin + 20) * 700) / 100;
+				int xLineMax = (int) ((xmax) + 20) * 700 / 100;
+				xLineMin++;
+				xLineMax--;
+				int y = (int) ((pas + 20) * 700) / 100;
+				// System.out.println(" xmin = " + xLineMin + " xmax = " + xLineMax);
+				im.setRGB(xLineMin, y, Color.red.getRGB());
+				im.setRGB(xLineMax, y, Color.red.getRGB());
+				
+			}*/
+
+		
 
 		/*
 		 * if(pas>yP1 && pas<yP2) {
