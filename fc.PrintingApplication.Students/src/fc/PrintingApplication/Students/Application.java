@@ -2,33 +2,32 @@ package fc.PrintingApplication.Students;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.geom.Point2D;
+import java.awt.Polygon;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.file.attribute.FileOwnerAttributeView;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 import javax.imageio.ImageIO;
-import javax.swing.text.StyledEditorKit.ForegroundAction;
 
 import com.owens.oobjloader.builder.Build;
 import com.owens.oobjloader.builder.Face;
 import com.owens.oobjloader.builder.FaceVertex;
 import com.owens.oobjloader.builder.VertexGeometric;
-import com.owens.oobjloader.builder.VertexNormal;
 import com.owens.oobjloader.parser.Parse;
 
 public class Application {
 	List<Tranche> listTranche = new ArrayList<>();
+	List<Point> listePointIntersectTranche = new ArrayList<>();
 	List<Face> listeFaceObjet = new ArrayList<>();
 	List<FaceVertex> listeSommetObjet = new ArrayList<>();
 	static final int widthImg = 300;
 	static final int heightImg = 300;
 	static float zminObj;
 	static float zmaxObj;
+	static Polygon polygon = new Polygon();
 
 	public static void main(String[] argv) {
 		//
@@ -109,10 +108,6 @@ public class Application {
 		}
 	}
 
-	public static void updateTriangleTrancheObjet() {
-
-	}
-
 	public void doTranche(List<FaceVertex> listeSommetObjet, List<Face> listeFaceObjet) {
 		zminObj = 999;
 		zmaxObj = 0;
@@ -130,6 +125,7 @@ public class Application {
 		BufferedImage currentTrancheImage;
 		while (pTranche < zmaxObj) {
 			Tranche tranche = new Tranche();
+			listePointIntersectTranche = new ArrayList<>();
 			currentTranche++;
 			currentTrancheImage = new BufferedImage(widthImg, heightImg, BufferedImage.TYPE_INT_RGB);
 			Graphics2D g = currentTrancheImage.createGraphics();
@@ -141,14 +137,19 @@ public class Application {
 				triangle.intersectionTrancheSegment(pTranche);
 				g.setColor(Color.GREEN);
 				if (triangle.pointIntersection.size() == 2) {
+					reductionPointIntersection(triangle);
 					tranche.listetrianglesTrancheObjet.add(triangle);
 					listTranche.add(tranche);
 				}
 
 			}
+			System.out.println("n point tranche" + tranche.listetrianglesTrancheObjet.size());
+			System.out.println(" n reduit" + listePointIntersectTranche.size());
 			currentTrancheImage = traceLineTranche(currentTrancheImage, tranche.listetrianglesTrancheObjet, g);
 			currentTrancheImage = remplissageScanline(tranche.listetrianglesTrancheObjet, currentTrancheImage);
 			g.dispose();
+			polygon = new Polygon();
+			listePointIntersectTranche = new ArrayList<>();
 			try {
 				ImageIO.write(currentTrancheImage, "png", new File("tranche" + currentTranche + ".png"));
 			} catch (IOException e) {
@@ -170,29 +171,31 @@ public class Application {
 			int y2 = (int) ((triangle.pointIntersection.get(1).v.y + 20) * 700) / 100;
 			g.setColor(Color.CYAN);
 			g.drawLine(x1, y1, x2, y2);
-			// im.setRGB(x1, y1, Color.GREEN.getRGB());
-			// im.setRGB(x2, y2, Color.G.getRGB());
+
 		}
+
 		return im;
 	}
 
-	BufferedImage remplissageScanline(List<Triangle> triangles, BufferedImage im) {
+	boolean isInside(int x, int y, List<Triangle> triangles) {
+		boolean res = false;
+		int j = triangles.size() - 1;
+		for (int i = 0; i < triangles.size(); j = i++) {
+			if ((triangles.get(i).pointIntersection.get(0).v.y > 0) != (triangles.get(j).pointIntersection
+					.get(0).v.y > 0)
+					&& (x < (triangles.get(j).pointIntersection.get(0).v.x
+							- triangles.get(i).pointIntersection.get(0).v.x)
+							* (y - triangles.get(i).pointIntersection.get(0).v.y)
+							/ (triangles.get(j).pointIntersection.get(0).v.y
+									- triangles.get(i).pointIntersection.get(0).v.y
+									+ triangles.get(i).pointIntersection.get(0).v.y))) {
 
-		float ymin = 999;
-		float ymax = -999;
-
-		// parcours tout les *
-		for (int i = 0; i < triangles.size(); i++) {
-			for (int j = 0; j < triangles.get(i).pointIntersection.size(); j++) {
-				ymin = Math.min(ymin, triangles.get(i).pointIntersection.get(j).v.y);
-				ymax = Math.max(ymax, triangles.get(i).pointIntersection.get(j).v.y);
+				res=!res;
 			}
 		}
-
-		im = intersectionSegment(triangles, ymin, ymax, im);
-
-		return im;
+		return res;
 	}
+
 
 	public BufferedImage intersectionSegment(List<Triangle> triangles, float ymin, float ymax, BufferedImage im) {
 
@@ -249,25 +252,30 @@ public class Application {
 				}
 			}
 
+}
+	
+/*	public void floodFill(int x, int y, Color fillColor) {
+
+		Stack<Point> callStack = new Stack<>();
+		callStack.add(new Point(x, y));
+		while (!callStack.isEmpty()) {
+			Point point = callStack.pop();
+			if (isInside(point.x, point.y)) {
+
+				if (mImage.getRGB(point.X, point.Y) != fillColor.getRGB()) {
+					System.out.println("adding point " + point.toString());
+					mImage.setRGB(point.X, point.Y, fillColor.getRGB());
+					repaint();
+					revalidate();
+					callStack.add(new Point(point.X + 1, point.Y));
+					callStack.add(new Point(point.X - 1, point.Y));
+					callStack.add(new Point(point.X, point.Y + 1));
+					callStack.add(new Point(point.X, point.Y - 1));
+				}
+			}
 		}
 
-		/*
-		 * if(pas>yP1 && pas<yP2) {
-		 * 
-		 * float t = (pas- yP1) / (yP2 - yP1);
-		 * 
-		 * if (t <= 1 && t >= 0) { float x = 0; float y = 0; x = xP1 + (xP2 - xP1) * t;
-		 * y = pas; listX.add(x); if(listX.size()==2) { float xmax =
-		 * Math.max(Math.max(0, listX.get(0)), listX.get(1)); float xmin =
-		 * Math.min(Math.min(999, listX.get(0)), listX.get(1)); int IndXmax = (int)
-		 * ((xmax + 20) * 700) / 100; ; int IndXmin = (int) ((xmin + 20) * 700) / 100; ;
-		 * IndXmin++; IndXmax--; for (int j = IndXmin; j <= IndXmax; j++) { im.setRGB(j,
-		 * (int) ((pas+20)*700)/100, Color.red.getRGB()); }
-		 * 
-		 * } } }
-		 */
-
 		return im;
+	}*/
 
-	}
 }
